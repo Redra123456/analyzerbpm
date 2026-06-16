@@ -1085,43 +1085,45 @@ export default function AnalyzerBPM() {  const [page,        setPage]        = u
     return { score, statement: qObj.assessment[score - 1] }
   }
 
-  // ── OTP send ────────────────────────────────────────────────────────────
-  const sendOtp = async () => {
-    // SANDBOX: no-op — OTP screen is bypassed entirely
-    // PRODUCTION: remove this return and uncomment the block below
-    return  // ← SANDBOX LINE — remove in production
-
-    /* ── PRODUCTION — uncomment for live deployment ───────────────────────
-    const email = profile.email.trim().toLowerCase()
+  // ── OTP send — calls Supabase Edge Function (send-otp) ──────────────────
+  const sendOtp = async (emailOverride) => {
+    const email = (emailOverride || profile.email).trim().toLowerCase()
     setOtpSending(true)
     setOtpError("")
     setRateLimitMsg("")
-    const count = await sb.getWeeklyCount(email)
-    if (count >= 2) {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/send-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_KEY,
+          },
+          body: JSON.stringify({ email }),
+        }
+      )
+      const data = await res.json()
+      if (!res.ok) {
+        setOtpError(data.error || "Failed to send login code. Please try again.")
+        setOtpSending(false)
+        return
+      }
+      setOtpExpiry(new Date(Date.now() + 10 * 60 * 1000))
       setOtpSending(false)
-      setRateLimitMsg("This account has already completed their assessment limit for the week.")
-      return
+      navigate(PAGES.OTP)
+    } catch {
+      setOtpError("Network error. Please check your connection and try again.")
+      setOtpSending(false)
     }
-    const code = String(Math.floor(100000 + Math.random() * 900000))
-    await sb.createOtp(email, code)
-    // Send `code` to `email` via your email provider (Resend, SendGrid, etc.)
-    setOtpExpiry(new Date(Date.now() + 10 * 60 * 1000))
-    setOtpSending(false)
-    navigate(PAGES.OTP)
-    ──────────────────────────────────────────────────────────────────────── */
   }
 
   const resendOtp = async () => {
-    await sendOtp()
+    await sendOtp(profile.email)
   }
 
-  // ── OTP verify ──────────────────────────────────────────────────────────
+  // ── OTP verify ───────────────────────────────────────────────────────────
   const verifyOtp = async () => {
-    // SANDBOX: auto-accept any code — OTP screen is bypassed so this won't run
-    // PRODUCTION: remove this block and uncomment the block below
-    navigate(PAGES.PROFILE)  // ← SANDBOX LINE — remove in production
-
-    /* ── PRODUCTION — uncomment for live deployment ───────────────────────
     setOtpVerifying(true)
     setOtpError("")
     const result = await sb.verifyOtp(profile.email.trim().toLowerCase(), otpCode.trim())
@@ -1133,7 +1135,6 @@ export default function AnalyzerBPM() {  const [page,        setPage]        = u
     } else {
       setOtpError("Invalid code. Please check and try again.")
     }
-    ──────────────────────────────────────────────────────────────────────── */
   }
 
   // ── AI Summary (on results screen) ───────────────────────────────────────
@@ -1689,31 +1690,15 @@ INSTRUCTIONS — follow exactly:
       }
       setOtpSending(true)
 
-      // ─── SANDBOX MODE ────────────────────────────────────────────────────
-      // Hardcoded OTP for local testing. OTP screen is auto-filled & skipped.
-      // TO ENABLE REAL OTP IN PRODUCTION: remove lines between START and END,
-      // then uncomment the PRODUCTION block below.
-      // ─── SANDBOX START ───────────────────────────────────────────────────
-      setProfile(p => ({ ...p, email: em }))
-      setOtpSending(false)
-      navigate(PAGES.PROFILE)   // skip OTP screen entirely in sandbox
-      return
-      // ─── SANDBOX END ─────────────────────────────────────────────────────
-
-      /* ── PRODUCTION OTP BLOCK — uncomment this for live deployment ────────
+      // ── PRODUCTION: check rate limit then send OTP via Edge Function ────────
       const count = await sb.getWeeklyCount(em)
       if (count >= 2) {
         setOtpSending(false)
         setRateLimitMsg("This account has already completed their assessment limit for the week.")
         return
       }
-      const code = String(Math.floor(100000 + Math.random() * 900000))
-      await sb.createOtp(em, code)
-      // Send `code` to `em` via your email provider (Resend, SendGrid, etc.)
-      setOtpExpiry(new Date(Date.now() + 10 * 60 * 1000))
-      setOtpSending(false)
-      navigate(PAGES.OTP)
-      ─────────────────────────────────────────────────────────────────────── */
+      setProfile(p => ({ ...p, email: em }))
+      await sendOtp(em)
     }
 
     return (
