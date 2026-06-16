@@ -1158,17 +1158,19 @@ Question-by-question responses:
 ${qAndA}`
 
     try {
-        const EDGE_URL = " https://dukfzmfbnnhwijlppphf.supabase.co/functions/v1/generate-report" 
-        const response = await fetch(EDGE_URL, { 
-          method: "POST", headers: { 
-            "Content-Type": "application/json", 
+        const EDGE_URL = "https://dukfzmfbnnhwijlppphf.supabase.co/functions/v1/generate-report"
+        const response = await fetch(EDGE_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
             "apikey": SUPABASE_KEY,
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 300,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      })
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 300,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        })
       const data = await response.json()
       const text = data?.content?.filter(b => b.type === "text").map(b => b.text).join("") || ""
       if (!text) throw new Error("Empty response")
@@ -1236,17 +1238,19 @@ INSTRUCTIONS — follow exactly:
 7. Do NOT use markdown headers, bold, or asterisks. Plain text only.`
 
     try {
-        const EDGE_URL = " https://dukfzmfbnnhwijlppphf.supabase.co/functions/v1/generate-report" 
-        const response = await fetch(EDGE_URL, { 
-          method: "POST", headers: { 
-            "Content-Type": "application/json", 
+        const EDGE_URL = "https://dukfzmfbnnhwijlppphf.supabase.co/functions/v1/generate-report"
+        const response = await fetch(EDGE_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
             "apikey": SUPABASE_KEY,
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 600,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      })
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 600,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        })
       const data = await response.json()
       const text = data?.content?.filter(b => b.type === "text").map(b => b.text).join("") || ""
       if (!text) throw new Error("Empty response")
