@@ -1167,9 +1167,8 @@ ${qAndA}`
             "apikey": SUPABASE_KEY,
           },
           body: JSON.stringify({
-            model: "claude-haiku-4-5",
+            prompt: prompt,
             max_tokens: 300,
-            messages: [{ role: "user", content: prompt }],
           }),
         })
       const data = await response.json()
@@ -1247,9 +1246,8 @@ INSTRUCTIONS — follow exactly:
             "apikey": SUPABASE_KEY,
           },
           body: JSON.stringify({
-            model: "claude-haiku-4-5",
+            prompt: prompt,
             max_tokens: 600,
-            messages: [{ role: "user", content: prompt }],
           }),
         })
       const data = await response.json()
