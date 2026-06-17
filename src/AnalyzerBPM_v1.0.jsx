@@ -659,7 +659,6 @@ const Header = ({ isLanding, onHome, onBack, right }) => (
     position:"sticky",top:0,background:P.white,zIndex:20,gap:10,
   }}>
     <div style={{display:"flex",alignItems:"center",gap:8}}>
-      {!isLanding && <Btn small onClick={onBack}>← Back</Btn>}
       <Logo onClick={onHome}/>
     </div>
     <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>{right}</div>
@@ -1628,8 +1627,11 @@ INSTRUCTIONS — follow exactly:
         <h1 style={{fontSize:28,fontWeight:800,lineHeight:1.3,color:P.navy,margin:"0 auto 12px",maxWidth:490,letterSpacing:"-0.4px"}}>
           Assess your business process maturity
         </h1>
-        <p style={{fontSize:14,lineHeight:1.7,color:P.muted,maxWidth:440,margin:"0 auto 28px"}}>
+        <p style={{fontSize:14,lineHeight:1.7,color:P.muted,maxWidth:440,margin:"0 auto 12px"}}>
           17 questions across 6 dimensions. Instant maturity score. Personalised recommendation report.
+        </p>
+        <p style={{fontSize:12,color:P.muted,maxWidth:440,margin:"0 auto 28px"}}>
+          Maximum of <strong style={{color:P.navy}}>two free assessments per week</strong> per email account.
         </p>
         <div style={{display:"flex",flexDirection:"column",gap:10,maxWidth:340,margin:"0 auto 10px"}}>
           <Btn primary onClick={()=>navigate("email_entry")} style={{padding:"13px 30px",fontSize:15,justifyContent:"center"}}>
