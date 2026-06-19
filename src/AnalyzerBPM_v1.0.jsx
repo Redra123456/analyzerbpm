@@ -553,13 +553,15 @@ const sb = {
         headers: {
           "Content-Type": "application/json",
           "apikey":        SUPABASE_KEY,
-          "Prefer":        "return=minimal",
+          "Prefer":        "return=representation",
         },
         body: JSON.stringify(record),
       })
-      return r.ok
+      if (!r.ok) return null
+      const data = await r.json()
+      return data?.[0]?.id ?? null
     } catch {
-      return false
+      return null
     }
   },
 
@@ -576,6 +578,24 @@ const sb = {
       return data.length
     } catch {
       return 0
+    }
+  },
+
+  async saveFeedback(record) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey":        SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Prefer":        "return=minimal",
+        },
+        body: JSON.stringify(record),
+      })
+      return r.ok
+    } catch {
+      return false
     }
   },
 
@@ -983,6 +1003,9 @@ export default function AnalyzerBPM() {  const [page,        setPage]        = u
   const [otpExpiry,   setOtpExpiry]   = useState(null)   // Date object
   const [otpCountdown,setOtpCountdown]= useState(0)
   const [rateLimitMsg,setRateLimitMsg]= useState("")
+
+  // ── Assessment DB record ID (used to link feedback) ──────────────────────
+  const [assessmentId, setAssessmentId] = useState(null)
 
   // ── AI summary (results page) ─────────────────────────────────────────────
   const [aiSummary,   setAiSummary]   = useState(null)   // { text, loading, error }
@@ -1608,7 +1631,8 @@ INSTRUCTIONS — follow exactly:
       time_to_complete_secs: timeToCompleteSecs,
       response_variance:     responseVariance,
     }
-    await sb.saveAssessment(record)
+    const savedId = await sb.saveAssessment(record)
+    setAssessmentId(savedId)
     setSubmitted(true)
     setSubmitting(false)
     navigate(PAGES.RESULTS)
@@ -2224,9 +2248,19 @@ INSTRUCTIONS — follow exactly:
   if (page === PAGES.FEEDBACK) {
     const canSubmit = feedbackStars > 0
 
-    const handleFeedbackSubmit = () => {
+    const handleFeedbackSubmit = async () => {
       if (!canSubmit) return
       setFeedbackSubmitted(true)
+
+      // Save feedback to Supabase
+      await sb.saveFeedback({
+        email:         profile.email.trim().toLowerCase(),
+        stars:         feedbackStars,
+        comment:       feedbackText.trim() || null,
+        assessment_id: assessmentId ?? null,
+        created_at:    new Date().toISOString(),
+      })
+
       // Generate report immediately after feedback
       generateAiReport()
       navigate(PAGES.REPORT)
